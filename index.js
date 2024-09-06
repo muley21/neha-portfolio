@@ -16,6 +16,7 @@ app.use(cors({
 }))
 
 app.use("/api/auth", require("./routes/auth.route"))
+app.use("/api/admin", require("./routes/admin.route"))
 // app.use("/api/user", require("./routes/user.routes"))
 
 app.use("*", (req, res) => {
