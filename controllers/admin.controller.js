@@ -3,6 +3,7 @@ const { checkEmpty } = require("../utils/checkEmpty")
 const Technology = require("../models/Technology")
 const Social = require("../models/Social")
 const Carousel = require("../models/Carousel")
+const upload = require("../utils/upload")
 exports.addTechnology = asyncHandler(async (req, res) => {
     const { name, category } = req.body
     const { isError, error } = checkEmpty({ name, category })
