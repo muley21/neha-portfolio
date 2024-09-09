@@ -111,7 +111,7 @@ exports.updateCarousel = asyncHandler(async (req, res) => {
 // deleteCarousel
 exports.deleteCarousel = asyncHandler(async (req, res) => {
     const { id } = req.params
-    const result = await Carousel.findById
+    const result = await Carousel.findById(id)
 
     await cloudinary.uploader.destroy(path.basename(result.hero))
     await Carousel.findByIdAndDelete(id)
