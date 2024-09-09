@@ -4,6 +4,10 @@ const Technology = require("../models/Technology")
 const Social = require("../models/Social")
 const Carousel = require("../models/Carousel")
 const upload = require("../utils/upload")
+const cloudinary = require("../utils/cloudinary.config")
+const path = require("path")
+const { error } = require("console")
+
 exports.addTechnology = asyncHandler(async (req, res) => {
     const { name, category } = req.body
     const { isError, error } = checkEmpty({ name, category })
@@ -60,22 +64,18 @@ exports.addCarousel = asyncHandler(async (req, res) => {
     upload(req, res, async err => {
 
 
-        const { hero, carousel } = req.body
-        const { error, isError } = checkEmpty({ hero, carousel })
+        const { carousel } = req.body
+        const { error, isError } = checkEmpty({ carousel })
         if (isError) {
             return res.status(400).json({ message: "All Fields Required", error })
         }
+        if (!req.file) {
+            return res.status(400).json({ message: "Hero Image Is required", error })
 
-        console.log(req.files)
-        const images = []
-        for (const item of req.files) {
-            const { secure_url } = await cloudinary.uploader.upload(item.path)
-            images.push(secure_url)
         }
 
-        // modify this code to support cloudinary
-
-        await Carousel.create({ hero, carousel })
+        const { secure_url } = await cloudinary.uploader.upload(req.file.path)
+        await Carousel.create({ hero: secure_url, carousel })
         return res.json({ message: "Carousel Create Success" })
     })
 })
@@ -89,14 +89,31 @@ exports.getCarousel = asyncHandler(async (req, res) => {
 // updateCarousel
 
 exports.updateCarousel = asyncHandler(async (req, res) => {
-    const { id } = req.params
-    await Carousel.findByIdAndUpdate(id, req.body)
-    res.json({ message: "Carousel update Success" })
+    upload(req, res, async err => {
+        if (err) {
+            return res.status(400).json({ message: "Multer Error ", error: err.message })
+        }
+        const { id } = req.params
+        if (req.file) {
+            const result = await Carousel.findById(id)
+            await cloudinary.uploader.destroy(path.basename(result.hero))
+            const { secure_url } = await cloudinary.uploader.upload(req.file.path)
+            await Carousel.findByIdAndUpdate(id, { carousel: req.body.carousel, hero: secure_url })
+            res.json({ message: "Carousel update Success" })
+        } else {
+            await Carousel.findByIdAndUpdate(id, { carousel: req.body.carousel })
+            res.json({ message: "Carousel update Success" })
+
+        }
+    })
 })
 
 // deleteCarousel
 exports.deleteCarousel = asyncHandler(async (req, res) => {
     const { id } = req.params
+    const result = await Carousel.findById
+
+    await cloudinary.uploader.destroy(path.basename(result.hero))
     await Carousel.findByIdAndDelete(id)
-    res.json({ message: "Carousel update Success" })
+    res.json({ message: "Carousel Delete Success" })
 })
